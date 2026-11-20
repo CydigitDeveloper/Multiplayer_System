@@ -154,5 +154,48 @@ namespace GameFramework.Core
         {
             return _lobby.HostId;
         }
+
+        public int GetMaxPlayers()
+        {
+            return _lobby.MaxPlayers;
+        }
+
+        public string GetLobbyData(string key)
+        {
+            if (_lobby?.Data == null || !_lobby.Data.TryGetValue(key, out DataObject data))
+            {
+                return null;
+            }
+
+            return data.Value;
+        }
+
+        public async Task<bool> UpdateLobbyData(Dictionary<string, string> data)
+        {
+            Dictionary<string, DataObject> lobbyData = new Dictionary<string, DataObject>();
+
+            foreach (var (key, value) in data)
+            {
+                lobbyData.Add(key, new DataObject(DataObject.VisibilityOptions.Member, value));
+            }
+
+            UpdateLobbyOptions options = new UpdateLobbyOptions()
+            {
+                Data = lobbyData
+            };
+
+            try
+            {
+                _lobby = await LobbyService.Instance.UpdateLobbyAsync(_lobby.Id, options);
+            }
+            catch (System.Exception)
+            {
+                return false;
+            }
+
+            LobbyEvents.OnLobbyUpdated?.Invoke(_lobby);
+
+            return true;
+        }
     }
 }

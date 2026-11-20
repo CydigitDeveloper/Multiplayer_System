@@ -12,9 +12,13 @@ namespace Game
         [SerializeField] private Button _readyButton;
         [SerializeField] private Button _startButton;
 
+        [Tooltip("Scene the host loads when the game starts. Clients follow automatically.")]
+        [SerializeField] private string _gameSceneName = "Loading";
+
         private void OnEnable()
         {
             _readyButton.onClick.AddListener(OnReadyPressed);
+            _startButton.onClick.AddListener(OnStartPressed);
 
             if (GameLobbyManager.Instance.IsHost)
             {
@@ -25,6 +29,7 @@ namespace Game
         private void OnDisable()
         {
             _readyButton.onClick.RemoveAllListeners();
+            _startButton.onClick.RemoveAllListeners();
 
             LobbyEvents.OnLobbyReady -= OnLobbyReady;
         }
@@ -47,6 +52,18 @@ namespace Game
         private void OnLobbyReady()
         {
             _startButton.gameObject.SetActive(true);
+        }
+
+        private async void OnStartPressed()
+        {
+            _startButton.interactable = false;
+
+            bool succeeded = await GameLobbyManager.Instance.StartGame(_gameSceneName);
+
+            if (!succeeded)
+            {
+                _startButton.interactable = true;
+            }
         }
     }
 }
